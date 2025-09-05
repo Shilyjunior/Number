@@ -5,7 +5,6 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '20'))
         durabilityHint('PERFORMANCE_OPTIMIZED')
         timeout(time: 30, unit: 'MINUTES')
-
     }
     
     environment {
@@ -22,7 +21,6 @@ pipeline {
                 echo '🔄 Checking out source code...'
                 checkout scm
                 
-                // Display build information
                 script {
                     echo "Build Number: ${env.BUILD_NUMBER}"
                     echo "Branch: ${env.BRANCH_NAME ?: 'main'}"
@@ -88,7 +86,6 @@ pipeline {
                 echo '📦 Packaging WAR file...'
                 sh "mvn ${env.MAVEN_ARGS} package -DskipTests"
                 
-                // Verify WAR file was created
                 script {
                     if (!fileExists("target/${APP_NAME}.war")) {
                         error("WAR file was not created successfully")
@@ -104,8 +101,6 @@ pipeline {
             steps {
                 echo '📚 Archiving build artifacts...'
                 archiveArtifacts artifacts: 'target/*.war', fingerprint: true, allowEmptyArchive: false
-                
-                // Archive additional useful files
                 archiveArtifacts artifacts: 'pom.xml', fingerprint: true, allowEmptyArchive: true
             }
         }
@@ -145,7 +140,7 @@ pipeline {
                         """
                         
                         // Stop Tomcat gracefully
-                        def stopResult = sh(script: """
+                        sh """
                             echo '🛑 Stopping Tomcat...'
                             if pgrep -f tomcat; then
                                 ${TOMCAT_HOME}/bin/shutdown.sh
@@ -169,7 +164,7 @@ pipeline {
                             else
                                 echo 'Tomcat is not running'
                             fi
-                        """, returnStatus: true)
+                        """
                         
                         // Remove old application directory
                         sh """
@@ -262,32 +257,14 @@ pipeline {
     post {
         success {
             echo '🎉 Build & Deployment successful!'
-            
-            // Send success notification (customize as needed)
             script {
                 def appUrl = "http://localhost:8080/${APP_NAME}/guess"
                 echo "🌐 Application is available at: ${appUrl}"
-                
-                // You can add email/Slack notifications here
-                // emailext (
-                //     subject: "✅ Deployment Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                //     body: "Application successfully deployed to: ${appUrl}",
-                //     to: "dev-team@company.com"
-                // )
             }
         }
         
         failure {
             echo '❌ Build or Deployment failed. Check logs.'
-            
-            // Send failure notification
-            script {
-                // emailext (
-                //     subject: "❌ Deployment Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                //     body: "Check console output: ${env.BUILD_URL}console",
-                //     to: "dev-team@company.com"
-                // )
-            }
         }
         
         unstable {
@@ -297,7 +274,6 @@ pipeline {
         always {
             echo '🧹 Cleaning up workspace...'
             
-            // Clean up workspace but preserve logs
             cleanWs(
                 deleteDirs: true, 
                 notFailBuild: true,
@@ -307,7 +283,6 @@ pipeline {
                 ]
             )
             
-            // Display build summary
             script {
                 echo """
                 📊 Build Summary:
