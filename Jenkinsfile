@@ -70,18 +70,6 @@ pipeline {
                 always {
                     // Publish test results
                     junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
-
-                    /*
-                    // Publish test coverage if available
-                    publishHTML([
-                        allowMissing: true,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'target/site/jacoco',
-                        reportFiles: 'index.html',
-                        reportName: 'Code Coverage Report'
-                    ])
-                    */
                 }
             }
         }
@@ -91,13 +79,16 @@ pipeline {
             steps {
                 echo '🔍 Running SonarQube code analysis...'
                 script {
-                    sh """
-                        mvn clean verify sonar:sonar \
-                        -Dsonar.projectKey=NumberGuessGame \
-                        -Dsonar.projectName='NumberGuessGame' \
-                        -Dsonar.host.url=${SONAR_HOST_URL} \
-                        -Dsonar.login=${SONAR_TOKEN}
-                    """
+                    // Use withSonarQubeEnv wrapper for proper integration
+                    withSonarQubeEnv('SonarQube') {
+                        sh """
+                            mvn clean verify sonar:sonar \
+                            -Dsonar.projectKey=NumberGuessGame \
+                            -Dsonar.projectName='NumberGuessGame' \
+                            -Dsonar.host.url=${SONAR_HOST_URL} \
+                            -Dsonar.login=${SONAR_TOKEN}
+                        """
+                    }
                 }
             }
         }
