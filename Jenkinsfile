@@ -13,16 +13,6 @@ pipeline {
         TOMCAT_WEBAPPS = "${TOMCAT_HOME}/webapps"
         TOMCAT_USER = 'tomcat'
         APP_NAME = 'NumberGuessGame'
-        // SonarQube configuration
-        SONAR_PROJECT_KEY = 'NumberGuessGame'
-        SONAR_PROJECT_NAME = 'Number Guess Game'
-        SONAR_PROJECT_VERSION = "${env.BUILD_NUMBER}"
-    }
-    
-    tools {
-        // Make sure SonarQube Scanner is available
-        // This name should match what's configured in Jenkins Global Tool Configuration
-        sonarqube 'SonarQube Scanner'
     }
     
     stages {
@@ -64,8 +54,8 @@ pipeline {
                         // Compile
                         sh "mvn ${env.MAVEN_ARGS} compile"
                         
-                        // Run tests with coverage reports for SonarQube
-                        sh "mvn ${env.MAVEN_ARGS} test jacoco:report"
+                        // Run tests
+                        sh "mvn ${env.MAVEN_ARGS} test"
                         
                     } catch (Exception e) {
                         currentBuild.result = 'FAILURE'
@@ -78,77 +68,17 @@ pipeline {
                     // Publish test results
                     junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
 
-                    // Archive coverage reports for SonarQube
+                    /*
+                    // Publish test coverage if available
                     publishHTML([
                         allowMissing: true,
                         alwaysLinkToLastBuild: true,
                         keepAll: true,
                         reportDir: 'target/site/jacoco',
                         reportFiles: 'index.html',
-                        reportName: 'JaCoCo Code Coverage Report'
+                        reportName: 'Code Coverage Report'
                     ])
-                }
-            }
-        }
-        
-        stage('SonarQube Analysis') {
-            steps {
-                echo '📊 Running SonarQube code analysis...'
-                script {
-                    try {
-                        // Run SonarQube analysis using withSonarQubeEnv
-                        withSonarQubeEnv('SonarQube Server') { // This name should match your SonarQube server configuration in Jenkins
-                            sh """
-                                mvn ${env.MAVEN_ARGS} sonar:sonar \
-                                    -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                                    -Dsonar.projectName='${SONAR_PROJECT_NAME}' \
-                                    -Dsonar.projectVersion=${SONAR_PROJECT_VERSION} \
-                                    -Dsonar.sources=src/main/java \
-                                    -Dsonar.tests=src/test/java \
-                                    -Dsonar.java.binaries=target/classes \
-                                    -Dsonar.java.test.binaries=target/test-classes \
-                                    -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-                                    -Dsonar.junit.reportPaths=target/surefire-reports \
-                                    -Dsonar.java.coveragePlugin=jacoco
-                            """
-                        }
-                        
-                        echo '✅ SonarQube analysis completed'
-                        
-                    } catch (Exception e) {
-                        echo "⚠️ SonarQube analysis failed: ${e.getMessage()}"
-                        currentBuild.result = 'UNSTABLE'
-                    }
-                }
-            }
-        }
-        
-        stage('Quality Gate') {
-            steps {
-                echo '🚪 Waiting for SonarQube Quality Gate...'
-                script {
-                    try {
-                        // Wait for SonarQube analysis to be processed and check quality gate
-                        timeout(time: 5, unit: 'MINUTES') {
-                            def qg = waitForQualityGate()
-                            
-                            if (qg.status != 'OK') {
-                                echo "⚠️ Quality Gate status: ${qg.status}"
-                                
-                                // You can choose to fail the build or just mark it as unstable
-                                // For strict quality enforcement, uncomment the next line:
-                                // error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                                
-                                currentBuild.result = 'UNSTABLE'
-                                echo '⚠️ Quality Gate failed, but continuing with deployment'
-                            } else {
-                                echo '✅ Quality Gate passed'
-                            }
-                        }
-                    } catch (Exception e) {
-                        echo "⚠️ Quality Gate check failed: ${e.getMessage()}"
-                        currentBuild.result = 'UNSTABLE'
-                    }
+                    */
                 }
             }
         }
@@ -331,9 +261,7 @@ pipeline {
             echo '🎉 Build & Deployment successful!'
             script {
                 def appUrl = "http://localhost:8081/${APP_NAME}/guess"
-                def sonarUrl = "${env.SONAR_HOST_URL}/dashboard?id=${SONAR_PROJECT_KEY}"
                 echo "🌐 Application is available at: ${appUrl}"
-                echo "📊 SonarQube dashboard: ${sonarUrl}"
             }
         }
         
@@ -369,3 +297,5 @@ pipeline {
         }
     }
 }
+
+
