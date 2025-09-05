@@ -20,13 +20,6 @@
         <mockito.version>4.11.0</mockito.version>
     </properties>
 
-    <!-- SonarQube -->
-    <plugin>
-         <groupId>org.sonarsource.scanner.maven</groupId>
-         <artifactId>sonar-maven-plugin</artifactId>
-         <version>3.9.1.2184</version>
-    </plugin>
-         
     <dependencies>
         <!-- Servlet API -->
         <dependency>
@@ -89,6 +82,13 @@
                 <configuration>
                     <webXml>src\main\webapp\WEB-INF\web.xml</webXml>
                 </configuration>
+            </plugin>
+
+            <!-- SonarQube Plugin -->
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>3.9.1.2184</version>
             </plugin>
         </plugins>
     </build>
