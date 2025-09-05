@@ -192,7 +192,7 @@ pipeline {
                             
                             echo '⏳ Waiting for Tomcat to start...'
                             for i in {1..60}; do
-                                if curl -f -s http://localhost:8080/ > /dev/null 2>&1; then
+                                if curl -f -s http://localhost:8081/ > /dev/null 2>&1; then
                                     echo '✅ Tomcat is responding'
                                     break
                                 fi
@@ -208,7 +208,7 @@ pipeline {
                             
                             # Check if application is accessible
                             for i in {1..30}; do
-                                if curl -f -s http://localhost:8080/${APP_NAME}/ > /dev/null 2>&1; then
+                                if curl -f -s http://localhost:8081/${APP_NAME}/ > /dev/null 2>&1; then
                                     echo '✅ Application is responding'
                                     break
                                 elif [ \$i -eq 30 ]; then
@@ -240,7 +240,7 @@ pipeline {
                             echo 'Testing application endpoints...'
                             
                             # Test main page
-                            curl -f -s -o /dev/null http://localhost:8080/${APP_NAME}/guess || {
+                            curl -f -s -o /dev/null http://localhost:8081/${APP_NAME}/guess || {
                                 echo '❌ Main page not accessible'
                                 exit 1
                             }
@@ -260,7 +260,7 @@ pipeline {
         success {
             echo '🎉 Build & Deployment successful!'
             script {
-                def appUrl = "http://localhost:8080/${APP_NAME}/guess"
+                def appUrl = "http://localhost:8081/${APP_NAME}/guess"
                 echo "🌐 Application is available at: ${appUrl}"
             }
         }
