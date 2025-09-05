@@ -13,6 +13,9 @@ pipeline {
         TOMCAT_WEBAPPS = "${TOMCAT_HOME}/webapps"
         TOMCAT_USER = 'tomcat'
         APP_NAME = 'NumberGuessGame'
+        // SonarQube environment variables
+        SONAR_HOST_URL = 'http://98.81.163.239:9000'
+        SONAR_TOKEN = 'sqp_83bd6bcca0c515af5cfa135cec962eb6a2cd6352'
     }
     
     stages {
@@ -79,6 +82,39 @@ pipeline {
                         reportName: 'Code Coverage Report'
                     ])
                     */
+                }
+            }
+        }
+        
+        // NEW STAGE: SonarQube Analysis
+        stage('SonarQube Analysis') {
+            steps {
+                echo '🔍 Running SonarQube code analysis...'
+                script {
+                    sh """
+                        mvn clean verify sonar:sonar \
+                        -Dsonar.projectKey=NumberGuessGame \
+                        -Dsonar.projectName='NumberGuessGame' \
+                        -Dsonar.host.url=${SONAR_HOST_URL} \
+                        -Dsonar.login=${SONAR_TOKEN}
+                    """
+                }
+            }
+        }
+        
+        // NEW STAGE: Quality Gate Check
+        stage('Quality Gate Check') {
+            steps {
+                echo '✅ Checking SonarQube Quality Gate status...'
+                script {
+                    timeout(time: 5, unit: 'MINUTES') {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "SonarQube Quality Gate failed: ${qg.status}"
+                        } else {
+                            echo "✅ Quality Gate passed: ${qg.status}"
+                        }
+                    }
                 }
             }
         }
@@ -157,7 +193,7 @@ pipeline {
                                     sleep 1
                                 done
                                 
-                                # Force kill if still running
+                                // Force kill if still running
                                 if pgrep -f tomcat > /dev/null; then
                                     echo '⚠️ Force killing Tomcat processes...'
                                     pkill -9 -f tomcat || true
@@ -297,5 +333,3 @@ pipeline {
         }
     }
 }
-
-
