@@ -69,7 +69,7 @@ pipeline {
                     junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
                     
                     // Publish test coverage if available
-                    publishHTML([
+                    #publishHTML([
                         allowMissing: true,
                         alwaysLinkToLastBuild: true,
                         keepAll: true,
