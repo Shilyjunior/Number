@@ -5,7 +5,7 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '20'))
         durabilityHint('PERFORMANCE_OPTIMIZED')
         timeout(time: 30, unit: 'MINUTES')
-        timestamps()
+
     }
     
     environment {
@@ -14,7 +14,6 @@ pipeline {
         TOMCAT_WEBAPPS = "${TOMCAT_HOME}/webapps"
         TOMCAT_USER = 'tomcat'
         APP_NAME = 'NumberGuessGame'
-        JAVA_HOME = '/usr/lib/jvm/java-11-openjdk'
     }
     
     stages {
